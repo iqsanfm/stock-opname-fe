@@ -1,0 +1,8 @@
+{
+  "name": "stock-opname-frontend",
+  "version": "1.0.0",
+  "description": "Frontend for Stock Opname System",
+  "scripts": {
+    "build": "echo 'Static site - no build needed'"
+  }
+}
