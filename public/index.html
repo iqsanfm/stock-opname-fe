@@ -995,7 +995,7 @@
 
         // Utility functions
         function formatNumber(num) {
-            return num.toLocaleString('id-ID');
+            return Math.round(num).toLocaleString('id-ID');
         }
 
         function formatCurrency(num) {
