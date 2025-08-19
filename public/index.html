@@ -427,7 +427,7 @@
 </head>
 <body>
     <!-- Authentication Modal -->
-    <div id="authModal" class="auth-container" style="display: none;">
+    <div id="authModal" class="auth-container" style="display: none !important;">
         <div class="auth-tabs">
             <button class="auth-tab active" onclick="switchAuthTab('login')">Login</button>
             <button class="auth-tab" onclick="switchAuthTab('register')">Register</button>
@@ -475,7 +475,7 @@
         </div>
     </div>
 
-    <div class="container" id="mainApp" style="display: none;">
+    <div class="container" id="mainApp" style="display: block;">
         <div class="user-info" id="userInfo"></div>
         <div class="header">
             <h1>Stock Opname System</h1>
@@ -789,7 +789,15 @@
             if (authToken) {
                 fetchUserProfile();
             } else {
-                showAuthModal();
+                // Skip auth modal, go directly to main app
+                hideAuthModal();
+                // Set dummy user for testing
+                currentUser = {
+                    username: 'Demo User',
+                    role: 'admin',
+                    email: 'demo@example.com'
+                };
+                updateUserInfo();
             }
         }
 
@@ -916,7 +924,6 @@
             if (currentUser) {
                 document.getElementById('userInfo').innerHTML = `
                     <strong>${currentUser.username}</strong> (${currentUser.role})
-                    <button class="logout-btn" onclick="logout()">Logout</button>
                 `;
             }
         }
