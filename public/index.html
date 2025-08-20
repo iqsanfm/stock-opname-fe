@@ -9,7 +9,7 @@
 </head>
 <body>
     <!-- Authentication Modal -->
-    <div id="authModal" class="auth-container" style="display: none !important;">
+    <div id="authModal" class="auth-container" style="display: block;">
         <div class="auth-tabs">
             <button class="auth-tab active" onclick="switchAuthTab('login')">Login</button>
             <button class="auth-tab" onclick="switchAuthTab('register')">Register</button>
@@ -28,6 +28,11 @@
                     </div>
                     <button type="submit" class="btn btn-success">Login</button>
                 </form>
+                <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px; border-left: 4px solid #3498db;">
+                    <h4 style="margin: 0 0 10px 0; color: #2c3e50;">Akun Demo:</h4>
+                    <p style="margin: 5px 0; font-size: 0.9rem;"><strong>Admin:</strong> admin@demo.com / admin123</p>
+                    <p style="margin: 5px 0; font-size: 0.9rem;"><strong>User:</strong> user@demo.com / user123</p>
+                </div>
             </div>
             <div id="registerForm" style="display: none;">
                 <h2>Register</h2>
@@ -57,7 +62,7 @@
         </div>
     </div>
 
-    <div class="container" id="mainApp" style="display: block;">
+    <div class="container" id="mainApp" style="display: none;">
         <div class="user-info" id="userInfo"></div>
         <div class="header">
             <h1>Stock Opname System</h1>
@@ -232,7 +237,7 @@
                     <h2>Laporan Bulanan</h2>
                     <div class="filter-section">
                         <div class="form-group">
-                            <label for="reportMonth">Pilih Bulan</label>
+                            <label for="reportMonth">Pilih Bulan : Di Menu Bulan</label>
                             <input type="month" id="reportMonth" onchange="displayMonthlyReport()">
                         </div>
                         <div class="form-group">
@@ -345,8 +350,31 @@
         let monthlyReports = [];
         let opnameData = [];
 
+        // Initialize demo users
+        function initializeDemoUsers() {
+            const existingUsers = localStorage.getItem('registeredUsers');
+            if (!existingUsers) {
+                const demoUsers = [
+                    {
+                        username: 'Admin Demo',
+                        email: 'admin@demo.com',
+                        password: 'admin123',
+                        role: 'admin'
+                    },
+                    {
+                        username: 'User Demo',
+                        email: 'user@demo.com', 
+                        password: 'user123',
+                        role: 'user'
+                    }
+                ];
+                localStorage.setItem('registeredUsers', JSON.stringify(demoUsers));
+            }
+        }
+
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
+            initializeDemoUsers();
             checkAuthStatus();
             
             // Set today's date as default
@@ -361,23 +389,42 @@
                 displayMonthlyReport();
                 displayOpnameData();
                 updateSparepartsList();
+                updateUIBasedOnRole();
             }
         });
+        
+        // Update UI based on user role
+        function updateUIBasedOnRole() {
+            if (!currentUser) return;
+            
+            // Hide sensitive buttons for regular users
+            if (currentUser.role === 'user') {
+                const sensitiveButtons = [
+                    'button[onclick="importData()"]',
+                    'button[onclick="importCSV()"]',
+                    'button[onclick="deleteAllData()"]'
+                ];
+                
+                sensitiveButtons.forEach(selector => {
+                    const button = document.querySelector(selector);
+                    if (button) {
+                        button.style.display = 'none';
+                    }
+                });
+            }
+        }
 
         // Authentication functions
         function checkAuthStatus() {
-            if (authToken) {
-                fetchUserProfile();
-            } else {
-                // Skip auth modal, go directly to main app
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
                 hideAuthModal();
-                // Set dummy user for testing
-                currentUser = {
-                    username: 'Demo User',
-                    role: 'admin',
-                    email: 'demo@example.com'
-                };
                 updateUserInfo();
+                loadDailyTransactions();
+                updateUIBasedOnRole();
+            } else {
+                showAuthModal();
             }
         }
 
@@ -439,29 +486,37 @@
         }
 
         // Login form handler
-        document.getElementById('loginFormElement').addEventListener('submit', async function(e) {
+        document.getElementById('loginFormElement').addEventListener('submit', function(e) {
             e.preventDefault();
             
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
             
-            try {
-                const response = await apiCall('/auth/login', 'POST', { email, password });
-                authToken = response.token;
-                currentUser = response.user;
-                localStorage.setItem('authToken', authToken);
+            // Simple demo authentication
+            const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+            const user = users.find(u => u.email === email && u.password === password);
+            
+            if (user) {
+                currentUser = {
+                    username: user.username,
+                    email: user.email,
+                    role: user.role
+                };
+                
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
                 
                 hideAuthModal();
                 updateUserInfo();
                 loadDailyTransactions();
+                updateUIBasedOnRole();
                 showAlert('Login berhasil!', 'success');
-            } catch (error) {
-                showAlert('Login gagal: ' + error.message, 'error');
+            } else {
+                showAlert('Email atau password salah!', 'error');
             }
         });
 
         // Register form handler
-        document.getElementById('registerFormElement').addEventListener('submit', async function(e) {
+        document.getElementById('registerFormElement').addEventListener('submit', function(e) {
             e.preventDefault();
             
             const username = document.getElementById('registerUsername').value;
@@ -469,48 +524,64 @@
             const password = document.getElementById('registerPassword').value;
             const role = document.getElementById('registerRole').value;
             
-            try {
-                // Use proper auth endpoint
-                const response = await apiCall('/auth/register', 'POST', { username, email, password, role });
-                authToken = response.token;
-                currentUser = response.user;
-                localStorage.setItem('authToken', authToken);
-                
-                hideAuthModal();
-                updateUserInfo();
-                loadDailyTransactions();
-                showAlert('Registrasi berhasil!', 'success');
-            } catch (error) {
-                showAlert('Registrasi gagal: ' + error.message, 'error');
+            // Get existing users
+            const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+            
+            // Check if email already exists
+            if (users.find(u => u.email === email)) {
+                showAlert('Email sudah terdaftar!', 'error');
+                return;
             }
+            
+            // Add new user
+            const newUser = { username, email, password, role };
+            users.push(newUser);
+            localStorage.setItem('registeredUsers', JSON.stringify(users));
+            
+            currentUser = {
+                username: newUser.username,
+                email: newUser.email,
+                role: newUser.role
+            };
+            
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            
+            hideAuthModal();
+            updateUserInfo();
+            loadDailyTransactions();
+            updateUIBasedOnRole();
+            showAlert('Registrasi berhasil!', 'success');
         });
 
-        async function fetchUserProfile() {
-            try {
-                const response = await apiCall('/auth/profile');
-                currentUser = response.user;
-                updateUserInfo();
-                hideAuthModal();
-                loadDailyTransactions();
-            } catch (error) {
-                // Token might be expired
-                localStorage.removeItem('authToken');
-                authToken = null;
-                showAuthModal();
+        // Role-based access control
+        function hasPermission(action) {
+            if (!currentUser) return false;
+            
+            // Admin has access to all actions
+            if (currentUser.role === 'admin') {
+                return true;
             }
+            
+            // User permissions - can't edit/delete sensitive data
+            if (currentUser.role === 'user') {
+                const restrictedActions = ['delete', 'deleteAllData', 'importData', 'importCSV'];
+                return !restrictedActions.includes(action);
+            }
+            
+            return false;
         }
 
         function updateUserInfo() {
             if (currentUser) {
                 document.getElementById('userInfo').innerHTML = `
                     <strong>${currentUser.username}</strong> (${currentUser.role})
+                    <button class="logout-btn" onclick="logout()">Logout</button>
                 `;
             }
         }
 
         function logout() {
-            localStorage.removeItem('authToken');
-            authToken = null;
+            localStorage.removeItem('currentUser');
             currentUser = null;
             dailyTransactions = [];
             monthlyReports = [];
@@ -837,7 +908,7 @@
                     <td>${formatCurrency(transaction.total)}</td>
                     <td>${transaction.keterangan || '-'}</td>
                     <td class="text-center">
-                        <button class="btn btn-danger btn-small" onclick="deleteTransaction(${transaction.id})">Hapus</button>
+                        ${hasPermission('delete') ? `<button class="btn btn-danger btn-small" onclick="deleteTransaction(${transaction.id})">Hapus</button>` : '<span class="text-muted">-</span>'}
                     </td>
                 `;
                 tbody.appendChild(row);
@@ -849,6 +920,11 @@
         }
 
         function deleteTransaction(id) {
+            if (!hasPermission('delete')) {
+                showAlert('Anda tidak memiliki izin untuk menghapus data!', 'error');
+                return;
+            }
+            
             if (confirm('Yakin ingin menghapus transaksi ini?')) {
                 dailyTransactions = dailyTransactions.filter(t => t.id !== id);
                 saveAllData(); // Auto-save dengan backup
@@ -1268,6 +1344,10 @@
         }
 
         function importData() {
+            if (!hasPermission('importData')) {
+                showAlert('Anda tidak memiliki izin untuk import data!', 'error');
+                return;
+            }
             document.getElementById('importFile').click();
         }
 
@@ -1313,6 +1393,10 @@
 
         // CSV Import functions
         function importCSV() {
+            if (!hasPermission('importCSV')) {
+                showAlert('Anda tidak memiliki izin untuk import CSV!', 'error');
+                return;
+            }
             document.getElementById('importCSVFile').click();
         }
 
@@ -1492,6 +1576,10 @@
 
         // Delete all data function with multi-step validation
         function deleteAllData() {
+            if (!hasPermission('deleteAllData')) {
+                showAlert('Anda tidak memiliki izin untuk menghapus semua data!', 'error');
+                return;
+            }
             // Step 1: Initial warning
             const step1 = confirm(
                 '⚠️ PERINGATAN KERAS ⚠️\n\n' +

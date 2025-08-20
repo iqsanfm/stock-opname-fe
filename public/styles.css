@@ -411,6 +411,34 @@ tr:hover td {
     text-align: center;
 }
 
+.text-muted {
+    color: #6c757d;
+    font-style: italic;
+}
+
+/* Badge Styles */
+.badge {
+    display: inline-block;
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    border-radius: 12px;
+    color: white;
+}
+
+.badge.stock_awal {
+    background: linear-gradient(45deg, #6c757d, #495057);
+}
+
+.badge.masuk {
+    background: linear-gradient(45deg, #28a745, #20c997);
+}
+
+.badge.keluar {
+    background: linear-gradient(45deg, #dc3545, #fd7e14);
+}
+
 .positive {
     color: #27ae60;
     font-weight: bold;
