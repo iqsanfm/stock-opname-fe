@@ -1,0 +1,14 @@
+tanggal,sparepart,jenis,merk,tipe_transaksi,jumlah,harga,keterangan
+2024-08-15,Laptop Dell Inspiron 15,Elektronik,Dell,stock_awal,25,8500000,Stock awal laptop kantor
+2024-08-15,Kertas A4 80gsm,Alat Tulis,Sidu,stock_awal,100,45000,Stock awal kertas A4
+2024-08-15,Meja Kantor Executive,Furniture,IKEA,stock_awal,15,1250000,Stock awal meja kantor
+2024-08-15,Tinta Printer HP 680,Elektronik,HP,stock_awal,50,185000,Stock awal tinta printer
+2024-08-16,Laptop Dell Inspiron 15,Elektronik,Dell,masuk,10,8500000,Pembelian laptop tambahan
+2024-08-16,Mouse Wireless,Elektronik,Logitech,masuk,30,125000,Pembelian mouse kantor
+2024-08-17,Laptop Dell Inspiron 15,Elektronik,Dell,keluar,3,8500000,Distribusi ke cabang
+2024-08-17,Kertas A4 80gsm,Alat Tulis,Sidu,keluar,25,45000,Pemakaian operasional
+2024-08-18,Meja Kantor Executive,Furniture,IKEA,keluar,2,1250000,Setup ruang baru
+2024-08-18,Tinta Printer HP 680,Elektronik,HP,keluar,15,185000,Penggantian tinta
+2024-08-19,Mouse Wireless,Elektronik,Logitech,keluar,8,125000,Distribusi ke karyawan
+2024-08-19,Kursi Kantor Ergonomis,Furniture,Herman Miller,masuk,20,750000,Pembelian kursi baru
+2024-08-20,Kursi Kantor Ergonomis,Furniture,Herman Miller,keluar,5,750000,Setup ruang meeting

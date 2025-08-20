@@ -3,427 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock Opname Spare Parts - Daily & Monthly</title>
+    <title>Stock Opname Barang - Daily & Monthly</title>
     <link rel="icon" href="data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1500px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            backdrop-filter: blur(10px);
-        }
-
-        .auth-container {
-            max-width: 400px;
-            margin: 50px auto;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            backdrop-filter: blur(10px);
-        }
-
-        .auth-tabs {
-            display: flex;
-            background: white;
-            border-radius: 15px 15px 0 0;
-        }
-
-        .auth-tab {
-            flex: 1;
-            padding: 15px;
-            background: #f8f9fa;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-            color: #7f8c8d;
-            transition: all 0.3s ease;
-        }
-
-        .auth-tab.active {
-            background: linear-gradient(45deg, #3498db, #2980b9);
-            color: white;
-        }
-
-        .auth-content {
-            padding: 30px;
-        }
-
-        .user-info {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(255,255,255,0.9);
-            padding: 10px 15px;
-            border-radius: 10px;
-            font-size: 0.9rem;
-            color: #2c3e50;
-        }
-
-        .logout-btn {
-            background: #e74c3c;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            margin-left: 10px;
-        }
-
-        .header {
-            background: linear-gradient(45deg, #2c3e50, #3498db);
-            color: white;
-            padding: 30px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -50%;
-            width: 200%;
-            height: 100%;
-            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
-            animation: shimmer 3s infinite;
-        }
-
-        @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-
-        .main-content {
-            padding: 30px;
-        }
-
-        .tabs {
-            display: flex;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
-            overflow: hidden;
-        }
-
-        .tab-button {
-            flex: 1;
-            padding: 20px;
-            background: #f8f9fa;
-            border: none;
-            cursor: pointer;
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #7f8c8d;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        .tab-button.active {
-            background: linear-gradient(45deg, #3498db, #2980b9);
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .form-section {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
-            border: 1px solid #e0e6ed;
-        }
-
-        .form-section h2 {
-            color: #2c3e50;
-            margin-bottom: 20px;
-            font-size: 1.5rem;
-            border-bottom: 3px solid #3498db;
-            padding-bottom: 10px;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .form-group label {
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 8px;
-            font-size: 0.9rem;
-        }
-
-        .form-group input,
-        .form-group select {
-            padding: 12px 15px;
-            border: 2px solid #e0e6ed;
-            border-radius: 10px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            background: #f8f9fa;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: #3498db;
-            background: white;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.2);
-        }
-
-        .btn {
-            background: linear-gradient(45deg, #3498db, #2980b9);
-            color: white;
-            padding: 12px 30px;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
-        }
-
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(52, 152, 219, 0.4);
-            background: linear-gradient(45deg, #2980b9, #1f4e79);
-        }
-
-        .btn-success {
-            background: linear-gradient(45deg, #27ae60, #229954);
-        }
-
-        .btn-success:hover {
-            background: linear-gradient(45deg, #229954, #1e8449);
-        }
-
-        .btn-danger {
-            background: linear-gradient(45deg, #e74c3c, #c0392b);
-        }
-
-        .btn-danger:hover {
-            background: linear-gradient(45deg, #c0392b, #a93226);
-        }
-
-        .btn-warning {
-            background: linear-gradient(45deg, #f39c12, #e67e22);
-        }
-
-        .btn-warning:hover {
-            background: linear-gradient(45deg, #e67e22, #d35400);
-        }
-
-        .table-container {
-            overflow-x: auto;
-            margin-top: 20px;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            border-radius: 15px;
-            overflow: hidden;
-        }
-
-        th, td {
-            padding: 12px 10px;
-            text-align: left;
-            border-bottom: 1px solid #e0e6ed;
-            font-size: 0.85rem;
-        }
-
-        th {
-            background: linear-gradient(45deg, #34495e, #2c3e50);
-            color: white;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 0.5px;
-        }
-
-        td {
-            transition: background 0.3s ease;
-        }
-
-        tr:hover td {
-            background: #f8f9fa;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            border: 1px solid #e0e6ed;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(45deg, #3498db, #9b59b6);
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
-        }
-
-        .stat-value {
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 5px;
-        }
-
-        .stat-label {
-            color: #7f8c8d;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .actions {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin: 20px 0;
-            flex-wrap: wrap;
-        }
-
-        .filter-section {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 15px;
-        }
-
-        @media (max-width: 768px) {
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .header h1 {
-                font-size: 2rem;
-            }
-            
-            .main-content {
-                padding: 20px;
-            }
-
-            .tabs {
-                flex-direction: column;
-            }
-        }
-
-        .alert {
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-weight: 500;
-        }
-
-        .alert-success {
-            background: linear-gradient(45deg, #d4edda, #c3e6cb);
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .alert-error {
-            background: linear-gradient(45deg, #f8d7da, #f5c6cb);
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .btn-small {
-            padding: 6px 12px;
-            font-size: 0.8rem;
-            margin: 2px;
-        }
-
-        .text-center {
-            text-align: center;
-        }
-
-        .positive {
-            color: #27ae60;
-            font-weight: bold;
-        }
-
-        .negative {
-            color: #e74c3c;
-            font-weight: bold;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <!-- Authentication Modal -->
@@ -525,26 +107,17 @@
                                 <input type="date" id="tanggal" name="tanggal" required>
                             </div>
                             <div class="form-group">
-                                <label for="sparepart_daily">Nama Spare Part</label>
-                                <input type="text" id="sparepart_daily" name="sparepart" required list="sparepartsList">
+                                <label for="sparepart_daily">Nama Barang</label>
+                                <input type="text" id="sparepart_daily" name="sparepart" required list="sparepartsList" placeholder="Contoh: Laptop, Kertas A4, Meja Kantor, dll">
                                 <datalist id="sparepartsList"></datalist>
                             </div>
                             <div class="form-group">
-                                <label for="jenis_daily">Jenis</label>
-                                <select id="jenis_daily" name="jenis" required>
-                                    <option value="">Pilih Jenis</option>
-                                    <option value="Engine">Engine</option>
-                                    <option value="Transmission">Transmission</option>
-                                    <option value="Brake">Brake</option>
-                                    <option value="Electrical">Electrical</option>
-                                    <option value="Body">Body</option>
-                                    <option value="Suspension">Suspension</option>
-                                    <option value="Other">Other</option>
-                                </select>
+                                <label for="jenis_daily">Jenis/Kategori</label>
+                                <input type="text" id="jenis_daily" name="jenis" required placeholder="Contoh: Elektronik, Makanan, Alat Tulis, dll">
                             </div>
                             <div class="form-group">
                                 <label for="merk_daily">Merk</label>
-                                <input type="text" id="merk_daily" name="merk" required>
+                                <input type="text" id="merk_daily" name="merk" required placeholder="Contoh: HP, Canon, IKEA, dll">
                             </div>
                             <div class="form-group">
                                 <label for="tipe_transaksi">Tipe Transaksi</label>
@@ -584,8 +157,8 @@
                             <input type="date" id="filterDate" onchange="filterDailyTransactions()">
                         </div>
                         <div class="form-group">
-                            <label for="filterSparepart">Filter Spare Part</label>
-                            <input type="text" id="filterSparepart" placeholder="Cari spare part..." onkeyup="filterDailyTransactions()">
+                            <label for="filterSparepart">Filter Nama Barang</label>
+                            <input type="text" id="filterSparepart" placeholder="Cari nama barang..." onkeyup="filterDailyTransactions()">
                         </div>
                         <div class="form-group">
                             <label for="filterType">Filter Tipe</label>
@@ -603,8 +176,11 @@
                         <button class="btn btn-warning" onclick="generateMonthlyReport()">Generate Laporan Bulanan</button>
                         <button class="btn btn-success" onclick="exportAllData()">Backup Data</button>
                         <button class="btn" onclick="importData()">Import Data</button>
+                        <button class="btn btn-primary" onclick="importCSV()">Import CSV</button>
                         <button class="btn btn-warning" onclick="checkDataIntegrity()">Cek Konsistensi Data</button>
+                        <button class="btn btn-danger" onclick="deleteAllData()">🗑️ Hapus Semua Data</button>
                         <input type="file" id="importFile" accept=".json" style="display: none" onchange="handleImportFile(event)">
+                        <input type="file" id="importCSVFile" accept=".csv" style="display: none" onchange="handleImportCSVFile(event)">
                     </div>
 
                     <div class="table-container">
@@ -612,7 +188,7 @@
                             <thead>
                                 <tr>
                                     <th>Tanggal</th>
-                                    <th>Spare Part</th>
+                                    <th>Nama Barang</th>
                                     <th>Jenis</th>
                                     <th>Merk</th>
                                     <th>Tipe</th>
@@ -660,8 +236,8 @@
                             <input type="month" id="reportMonth" onchange="displayMonthlyReport()">
                         </div>
                         <div class="form-group">
-                            <label for="filterMonthlySparepart">Filter Spare Part</label>
-                            <input type="text" id="filterMonthlySparepart" placeholder="Cari spare part..." onkeyup="displayMonthlyReport()">
+                            <label for="filterMonthlySparepart">Filter Nama Barang</label>
+                            <input type="text" id="filterMonthlySparepart" placeholder="Cari nama barang..." onkeyup="displayMonthlyReport()">
                         </div>
                     </div>
 
@@ -674,7 +250,7 @@
                         <table id="monthlyReportTable">
                             <thead>
                                 <tr>
-                                    <th>Spare Part</th>
+                                    <th>Nama Barang</th>
                                     <th>Jenis</th>
                                     <th>Merk</th>
                                     <th>Stock Awal</th>
@@ -723,8 +299,8 @@
                             <input type="month" id="opnameMonth" onchange="displayOpnameData()">
                         </div>
                         <div class="form-group">
-                            <label for="filterOpnameSparepart">Filter Spare Part</label>
-                            <input type="text" id="filterOpnameSparepart" placeholder="Cari spare part..." onkeyup="displayOpnameData()">
+                            <label for="filterOpnameSparepart">Filter Nama Barang</label>
+                            <input type="text" id="filterOpnameSparepart" placeholder="Cari nama barang..." onkeyup="displayOpnameData()">
                         </div>
                     </div>
 
@@ -737,7 +313,7 @@
                         <table id="opnameTable">
                             <thead>
                                 <tr>
-                                    <th>Spare Part</th>
+                                    <th>Nama Barang</th>
                                     <th>Jenis</th>
                                     <th>Merk</th>
                                     <th>Stock Sistem</th>
@@ -1044,11 +620,11 @@
 
             // Basic validation
             if (!data.sparepart || data.sparepart.trim().length < 2) {
-                errors.push('Nama spare part harus minimal 2 karakter');
+                errors.push('Nama barang harus minimal 2 karakter');
             }
 
             if (!data.jenis) {
-                errors.push('Jenis spare part harus dipilih');
+                errors.push('Jenis barang harus diisi');
             }
 
             if (!data.merk || data.merk.trim().length < 1) {
@@ -1206,16 +782,21 @@
 
         function updateDailyStatistics() {
             const today = new Date().toISOString().split('T')[0];
+            
+            // Today's transactions for "Transaksi Hari Ini"
             const todayTransactions = dailyTransactions.filter(t => t.tanggal === today);
+            const todayCount = todayTransactions.length;
             
-            const totalTransactions = todayTransactions.length;
-            const totalIn = todayTransactions.filter(t => t.tipe_transaksi === 'masuk' || t.tipe_transaksi === 'stock_awal')
+            // All transactions for totals
+            const allTransactions = dailyTransactions;
+            const totalIn = allTransactions.filter(t => t.tipe_transaksi === 'masuk' || t.tipe_transaksi === 'stock_awal')
                             .reduce((sum, t) => sum + t.jumlah, 0);
-            const totalOut = todayTransactions.filter(t => t.tipe_transaksi === 'keluar')
+            const totalOut = allTransactions.filter(t => t.tipe_transaksi === 'keluar')
                            .reduce((sum, t) => sum + t.jumlah, 0);
-            const totalValue = todayTransactions.reduce((sum, t) => sum + t.total, 0);
+            const totalValue = allTransactions.reduce((sum, t) => sum + t.total, 0);
             
-            document.getElementById('dailyTransactions').textContent = totalTransactions;
+            // Update display
+            document.getElementById('dailyTransactions').textContent = todayCount;
             document.getElementById('dailyIn').textContent = totalIn;
             document.getElementById('dailyOut').textContent = totalOut;
             document.getElementById('dailyValue').textContent = formatCurrency(totalValue);
@@ -1495,18 +1076,25 @@
             updateOpnameStatistics(data);
 
             data.forEach((item, index) => {
+                // Find actual index in the original data array
+                const actualIndex = existingOpname.data.findIndex(origItem => 
+                    origItem.sparepart === item.sparepart && 
+                    origItem.jenis === item.jenis && 
+                    origItem.merk === item.merk
+                );
+                
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${item.sparepart}</td>
                     <td>${item.jenis}</td>
                     <td>${item.merk}</td>
                     <td>${item.stockSistem}</td>
-                    <td><input type="number" value="${item.stockFisik}" min="0" onchange="updateStockFisik(${index}, this.value)" class="form-control"></td>
+                    <td><input type="number" value="${item.stockFisik}" min="0" onchange="updateStockFisik(${actualIndex}, this.value)" class="form-control"></td>
                     <td class="${item.selisih > 0 ? 'positive' : item.selisih < 0 ? 'negative' : ''}">${item.selisih}</td>
                     <td>${formatCurrency(item.harga)}</td>
                     <td>${formatCurrency(item.valueSistem)}</td>
                     <td>${formatCurrency(item.valueFisik)}</td>
-                    <td><input type="text" value="${item.keterangan}" onchange="updateKeterangan(${index}, this.value)" class="form-control" placeholder="Keterangan..."></td>
+                    <td><input type="text" value="${item.keterangan}" onchange="updateKeterangan(${actualIndex}, this.value)" class="form-control" placeholder="Keterangan..."></td>
                 `;
                 tbody.appendChild(row);
             });
@@ -1516,7 +1104,7 @@
             const opnameMonth = document.getElementById('opnameMonth').value;
             const existingOpname = opnameData.find(o => o.month === opnameMonth);
             
-            if (existingOpname && existingOpname.data[index]) {
+            if (existingOpname && index >= 0 && index < existingOpname.data.length && existingOpname.data[index]) {
                 const stockFisik = parseInt(value) || 0;
                 existingOpname.data[index].stockFisik = stockFisik;
                 existingOpname.data[index].selisih = stockFisik - existingOpname.data[index].stockSistem;
@@ -1531,7 +1119,7 @@
             const opnameMonth = document.getElementById('opnameMonth').value;
             const existingOpname = opnameData.find(o => o.month === opnameMonth);
             
-            if (existingOpname && existingOpname.data[index]) {
+            if (existingOpname && index >= 0 && index < existingOpname.data.length && existingOpname.data[index]) {
                 existingOpname.data[index].keterangan = value;
                 saveAllData(); // Auto-save dengan backup
             }
@@ -1721,6 +1309,286 @@
             
             reader.readAsText(file);
             event.target.value = ''; // Reset input
+        }
+
+        // CSV Import functions
+        function importCSV() {
+            document.getElementById('importCSVFile').click();
+        }
+
+        function parseCSV(csvText) {
+            const lines = csvText.trim().split('\n');
+            const result = [];
+            
+            if (lines.length < 2) {
+                throw new Error('File CSV harus memiliki minimal header dan 1 baris data');
+            }
+
+            // Parse header
+            const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+            
+            // Expected headers
+            const expectedHeaders = ['tanggal', 'sparepart', 'jenis', 'merk', 'tipe_transaksi', 'jumlah', 'harga', 'keterangan'];
+            const missingHeaders = expectedHeaders.filter(h => !headers.some(header => header.toLowerCase() === h));
+            
+            if (missingHeaders.length > 0) {
+                throw new Error(`Header yang hilang: ${missingHeaders.join(', ')}`);
+            }
+
+            // Parse data rows
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue; // Skip empty lines
+                
+                const values = parseCSVLine(line);
+                
+                if (values.length !== headers.length) {
+                    throw new Error(`Baris ${i + 1}: Jumlah kolom tidak sesuai dengan header`);
+                }
+
+                const row = {};
+                headers.forEach((header, index) => {
+                    row[header.toLowerCase()] = values[index];
+                });
+
+                result.push(row);
+            }
+
+            return result;
+        }
+
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current.trim().replace(/^"|"$/g, ''));
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            
+            result.push(current.trim().replace(/^"|"$/g, ''));
+            return result;
+        }
+
+        function validateCSVData(csvData) {
+            const errors = [];
+            const warnings = [];
+            
+            csvData.forEach((row, index) => {
+                const lineNumber = index + 2; // +2 because index starts at 0 and we skip header
+                
+                // Validate required fields
+                if (!row.tanggal) {
+                    errors.push(`Baris ${lineNumber}: Tanggal harus diisi`);
+                } else {
+                    // Validate date format
+                    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+                    if (!dateRegex.test(row.tanggal)) {
+                        errors.push(`Baris ${lineNumber}: Format tanggal harus YYYY-MM-DD (${row.tanggal})`);
+                    }
+                }
+                
+                if (!row.sparepart || row.sparepart.trim().length < 2) {
+                    errors.push(`Baris ${lineNumber}: Nama barang harus minimal 2 karakter`);
+                }
+                
+                if (!row.jenis) {
+                    errors.push(`Baris ${lineNumber}: Jenis harus diisi`);
+                }
+                
+                if (!row.merk || row.merk.trim().length < 1) {
+                    errors.push(`Baris ${lineNumber}: Merk harus diisi`);
+                }
+                
+                if (!row.tipe_transaksi || !['stock_awal', 'masuk', 'keluar'].includes(row.tipe_transaksi)) {
+                    errors.push(`Baris ${lineNumber}: Tipe transaksi harus salah satu dari: stock_awal, masuk, keluar`);
+                }
+                
+                const jumlah = parseInt(row.jumlah);
+                if (isNaN(jumlah) || jumlah <= 0) {
+                    errors.push(`Baris ${lineNumber}: Jumlah harus berupa angka positif`);
+                }
+                
+                const harga = parseFloat(row.harga);
+                if (row.tipe_transaksi !== 'keluar' && (isNaN(harga) || harga <= 0)) {
+                    errors.push(`Baris ${lineNumber}: Harga harus berupa angka positif untuk transaksi ${row.tipe_transaksi}`);
+                }
+            });
+            
+            return { errors, warnings };
+        }
+
+        function handleImportCSVFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            if (!file.name.toLowerCase().endsWith('.csv')) {
+                showAlert('File harus berformat CSV!', 'error');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const csvText = e.target.result;
+                    const csvData = parseCSV(csvText);
+                    
+                    // Validate data
+                    const validation = validateCSVData(csvData);
+                    
+                    if (validation.errors.length > 0) {
+                        showAlert('Error validasi CSV:\n\n' + validation.errors.join('\n'), 'error');
+                        return;
+                    }
+                    
+                    // Convert CSV data to transaction format
+                    const transactions = csvData.map(row => ({
+                        id: Date.now() + Math.random(),
+                        tanggal: row.tanggal,
+                        sparepart: row.sparepart.trim(),
+                        jenis: row.jenis,
+                        merk: row.merk.trim(),
+                        tipe_transaksi: row.tipe_transaksi,
+                        jumlah: parseInt(row.jumlah),
+                        harga: parseFloat(row.harga) || 0,
+                        keterangan: row.keterangan || 'Import CSV',
+                        total: parseInt(row.jumlah) * (parseFloat(row.harga) || 0)
+                    }));
+                    
+                    // Show confirmation
+                    const confirmMessage = `Akan mengimport ${transactions.length} transaksi dari CSV.\n\nLanjutkan?`;
+                    if (!confirm(confirmMessage)) {
+                        return;
+                    }
+                    
+                    // Add to daily transactions
+                    dailyTransactions.push(...transactions);
+                    saveAllData();
+                    
+                    // Refresh all displays and statistics
+                    updateDailyStatistics();
+                    displayDailyTransactions();
+                    updateSparepartsList();
+                    
+                    showAlert(`Berhasil import ${transactions.length} transaksi dari CSV!`, 'success');
+                    
+                } catch (error) {
+                    showAlert('Error parsing CSV: ' + error.message, 'error');
+                }
+            };
+            
+            reader.readAsText(file);
+            event.target.value = ''; // Reset input
+        }
+
+        // Delete all data function with multi-step validation
+        function deleteAllData() {
+            // Step 1: Initial warning
+            const step1 = confirm(
+                '⚠️ PERINGATAN KERAS ⚠️\n\n' +
+                'Anda akan MENGHAPUS SEMUA DATA termasuk:\n' +
+                '• Semua transaksi harian\n' +
+                '• Semua laporan bulanan\n' +
+                '• Semua data stock opname\n\n' +
+                'Data yang dihapus TIDAK DAPAT DIKEMBALIKAN!\n\n' +
+                'Pastikan Anda sudah melakukan BACKUP terlebih dahulu.\n\n' +
+                'Lanjutkan ke tahap konfirmasi?'
+            );
+            
+            if (!step1) {
+                showAlert('Penghapusan data dibatalkan.', 'info');
+                return;
+            }
+            
+            // Step 2: Check if user has backup
+            const step2 = confirm(
+                '🔄 KONFIRMASI BACKUP\n\n' +
+                'Apakah Anda sudah melakukan backup data?\n\n' +
+                'Jika belum, silakan klik "Cancel" dan lakukan backup terlebih dahulu dengan tombol "Backup Data".\n\n' +
+                'Jika sudah backup, klik "OK" untuk lanjut.'
+            );
+            
+            if (!step2) {
+                showAlert('Silakan lakukan backup terlebih dahulu sebelum menghapus data.', 'warning');
+                return;
+            }
+            
+            // Step 3: Show current data stats
+            const totalTransactions = dailyTransactions.length;
+            const totalReports = monthlyReports.length;
+            const totalOpname = opnameData.length;
+            
+            const step3 = confirm(
+                '📊 DATA YANG AKAN DIHAPUS:\n\n' +
+                `• Transaksi Harian: ${totalTransactions} record\n` +
+                `• Laporan Bulanan: ${totalReports} laporan\n` +
+                `• Data Stock Opname: ${totalOpname} opname\n\n` +
+                'Apakah Anda yakin ingin menghapus SEMUA data ini?\n\n' +
+                'Sekali lagi, data yang dihapus TIDAK DAPAT DIKEMBALIKAN!'
+            );
+            
+            if (!step3) {
+                showAlert('Penghapusan data dibatalkan.', 'info');
+                return;
+            }
+            
+            // Step 4: Final confirmation with typing
+            const confirmText = prompt(
+                '🚨 KONFIRMASI TERAKHIR 🚨\n\n' +
+                'Untuk melanjutkan penghapusan, ketik kata berikut:\n\n' +
+                'HAPUS SEMUA DATA\n\n' +
+                '(Ketik persis seperti di atas, huruf besar semua)'
+            );
+            
+            if (confirmText !== 'HAPUS SEMUA DATA') {
+                showAlert('Konfirmasi tidak sesuai. Penghapusan data dibatalkan.', 'error');
+                return;
+            }
+            
+            // Step 5: Execute deletion
+            try {
+                // Clear all data arrays
+                dailyTransactions.length = 0;
+                monthlyReports.length = 0;
+                opnameData.length = 0;
+                
+                // Save empty data to localStorage
+                saveAllData();
+                
+                // Refresh all displays
+                updateDailyStatistics();
+                displayDailyTransactions();
+                displayMonthlyReport();
+                displayOpnameData();
+                updateSparepartsList();
+                
+                // Clear all form fields
+                document.getElementById('dailyTransactionForm').reset();
+                document.getElementById('reportMonth').value = '';
+                document.getElementById('opnameMonth').value = '';
+                
+                showAlert(
+                    '✅ SEMUA DATA BERHASIL DIHAPUS!\n\n' +
+                    `Dihapus:\n` +
+                    `• ${totalTransactions} transaksi harian\n` +
+                    `• ${totalReports} laporan bulanan\n` +
+                    `• ${totalOpname} data stock opname\n\n` +
+                    'Sistem sudah bersih dan siap untuk data baru.',
+                    'success'
+                );
+                
+            } catch (error) {
+                showAlert('Error saat menghapus data: ' + error.message, 'error');
+            }
         }
 
         // Data integrity check

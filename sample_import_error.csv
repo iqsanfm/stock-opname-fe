@@ -1,0 +1,8 @@
+tanggal,sparepart,jenis,merk,tipe_transaksi,jumlah,harga,keterangan
+2024-13-45,Filter Oli,Filter,Sakura,stock_awal,50,28000,Error: tanggal invalid
+2024-08-20,,Filter,Sakura,stock_awal,20,28000,Error: sparepart kosong
+2024-08-20,Kampas Rem,Rem,,stock_awal,15,135000,Error: merk kosong
+2024-08-20,Oli Mesin,Oli,Shell,invalid_type,30,95000,Error: tipe transaksi invalid
+2024-08-20,Busi,Kelistrikan,NGK,masuk,-5,48000,Error: jumlah negatif
+2024-08-20,Filter,Filter,Sakura,masuk,10,invalid,Error: harga invalid
+2024-08-20,A,Filter,Sakura,masuk,10,28000,Error: nama spare part terlalu pendek
