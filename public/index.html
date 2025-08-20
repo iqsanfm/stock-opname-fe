@@ -603,6 +603,7 @@
                         <button class="btn btn-warning" onclick="generateMonthlyReport()">Generate Laporan Bulanan</button>
                         <button class="btn btn-success" onclick="exportAllData()">Backup Data</button>
                         <button class="btn" onclick="importData()">Import Data</button>
+                        <button class="btn btn-warning" onclick="checkDataIntegrity()">Cek Konsistensi Data</button>
                         <input type="file" id="importFile" accept=".json" style="display: none" onchange="handleImportFile(event)">
                     </div>
 
@@ -1036,6 +1037,106 @@
             }
         }
 
+        // Validation functions
+        function validateTransaction(data) {
+            const errors = [];
+            const warnings = [];
+
+            // Basic validation
+            if (!data.sparepart || data.sparepart.trim().length < 2) {
+                errors.push('Nama spare part harus minimal 2 karakter');
+            }
+
+            if (!data.jenis) {
+                errors.push('Jenis spare part harus dipilih');
+            }
+
+            if (!data.merk || data.merk.trim().length < 1) {
+                errors.push('Merk harus diisi');
+            }
+
+            if (!data.tipe_transaksi) {
+                errors.push('Tipe transaksi harus dipilih');
+            }
+
+            if (!data.jumlah || data.jumlah <= 0) {
+                errors.push('Jumlah harus lebih dari 0');
+            }
+
+            if (data.tipe_transaksi !== 'keluar' && (!data.harga || data.harga <= 0)) {
+                errors.push('Harga harus lebih dari 0 untuk transaksi masuk/stock awal');
+            }
+
+            // Check for duplicates on same date
+            const sameDate = dailyTransactions.filter(t => t.tanggal === data.tanggal);
+            const duplicate = sameDate.find(t => 
+                t.sparepart.toLowerCase().trim() === data.sparepart.toLowerCase().trim() &&
+                t.jenis === data.jenis &&
+                t.merk.toLowerCase().trim() === data.merk.toLowerCase().trim() &&
+                t.tipe_transaksi === data.tipe_transaksi
+            );
+
+            if (duplicate) {
+                warnings.push(`Item yang sama sudah ada di tanggal ${data.tanggal}. Yakin ingin menambah lagi?`);
+            }
+
+            // Check for multiple stock_awal entries
+            if (data.tipe_transaksi === 'stock_awal') {
+                const existingStockAwal = dailyTransactions.find(t => 
+                    t.sparepart.toLowerCase().trim() === data.sparepart.toLowerCase().trim() &&
+                    t.jenis === data.jenis &&
+                    t.merk.toLowerCase().trim() === data.merk.toLowerCase().trim() &&
+                    t.tipe_transaksi === 'stock_awal'
+                );
+
+                if (existingStockAwal) {
+                    warnings.push(`Stock awal untuk item ini sudah ada. Sebaiknya edit yang lama atau gunakan 'Barang Masuk'.`);
+                }
+            }
+
+            // Price consistency check
+            const similarItems = dailyTransactions.filter(t => 
+                t.sparepart.toLowerCase().trim() === data.sparepart.toLowerCase().trim() &&
+                t.jenis === data.jenis &&
+                t.merk.toLowerCase().trim() === data.merk.toLowerCase().trim() &&
+                t.harga > 0
+            );
+
+            if (similarItems.length > 0) {
+                const avgPrice = similarItems.reduce((sum, t) => sum + t.harga, 0) / similarItems.length;
+                const priceDifference = Math.abs(data.harga - avgPrice) / avgPrice;
+
+                if (priceDifference > 0.2) { // More than 20% difference
+                    warnings.push(`Harga berbeda signifikan dari rata-rata sebelumnya (Rp ${Math.round(avgPrice).toLocaleString('id-ID')}). Pastikan harga benar.`);
+                }
+            }
+
+            // Check stock quantity logic
+            if (data.tipe_transaksi === 'keluar') {
+                const itemKey = `${data.sparepart.toLowerCase().trim()}_${data.jenis}_${data.merk.toLowerCase().trim()}`;
+                
+                // Calculate current stock
+                const stockTransactions = dailyTransactions.filter(t => 
+                    `${t.sparepart.toLowerCase().trim()}_${t.jenis}_${t.merk.toLowerCase().trim()}` === itemKey
+                );
+
+                const currentStock = stockTransactions.reduce((stock, t) => {
+                    if (t.tipe_transaksi === 'stock_awal' || t.tipe_transaksi === 'masuk') {
+                        return stock + t.jumlah;
+                    } else if (t.tipe_transaksi === 'keluar') {
+                        return stock - t.jumlah;
+                    }
+                    return stock;
+                }, 0);
+
+                if (data.jumlah > currentStock) {
+                    warnings.push(`Stock tidak cukup! Stock saat ini: ${currentStock}, diminta: ${data.jumlah}`);
+                }
+            }
+
+            return { errors, warnings };
+        }
+
         // Daily transaction form submission
         document.getElementById('dailyTransactionForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -1044,15 +1145,32 @@
             const data = {
                 id: Date.now(), // Unique ID for editing
                 tanggal: formData.get('tanggal'),
-                sparepart: formData.get('sparepart'),
+                sparepart: formData.get('sparepart').trim(),
                 jenis: formData.get('jenis'),
-                merk: formData.get('merk'),
+                merk: formData.get('merk').trim(),
                 tipe_transaksi: formData.get('tipe_transaksi'),
                 jumlah: parseInt(formData.get('jumlah')) || 0,
                 harga: parseFloat(formData.get('harga')) || 0,
                 keterangan: formData.get('keterangan') || '',
                 total: (parseInt(formData.get('jumlah')) || 0) * (parseFloat(formData.get('harga')) || 0)
             };
+            
+            // Validate transaction
+            const validation = validateTransaction(data);
+            
+            // Show errors if any
+            if (validation.errors.length > 0) {
+                showAlert('Error: ' + validation.errors.join(', '), 'error');
+                return;
+            }
+            
+            // Show warnings and ask for confirmation
+            if (validation.warnings.length > 0) {
+                const warningMessage = 'Peringatan:\n\n' + validation.warnings.join('\n\n') + '\n\nLanjutkan?';
+                if (!confirm(warningMessage)) {
+                    return;
+                }
+            }
             
             dailyTransactions.push(data);
             saveAllData(); // Auto-save dengan backup
@@ -1603,6 +1721,106 @@
             
             reader.readAsText(file);
             event.target.value = ''; // Reset input
+        }
+
+        // Data integrity check
+        function checkDataIntegrity() {
+            const issues = [];
+            const duplicates = [];
+            const stockIssues = [];
+            const priceIssues = [];
+
+            // Group transactions by item
+            const itemGroups = {};
+            dailyTransactions.forEach(t => {
+                const key = `${t.sparepart.toLowerCase().trim()}_${t.jenis}_${t.merk.toLowerCase().trim()}`;
+                if (!itemGroups[key]) {
+                    itemGroups[key] = [];
+                }
+                itemGroups[key].push(t);
+            });
+
+            // Check each item group
+            Object.keys(itemGroups).forEach(itemKey => {
+                const transactions = itemGroups[itemKey];
+                const itemName = transactions[0].sparepart;
+
+                // Check for multiple stock_awal
+                const stockAwalCount = transactions.filter(t => t.tipe_transaksi === 'stock_awal').length;
+                if (stockAwalCount > 1) {
+                    issues.push(`${itemName}: Memiliki ${stockAwalCount} stock awal`);
+                }
+
+                // Check stock calculation
+                let currentStock = 0;
+                let hasNegativeStock = false;
+                transactions.sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal)).forEach(t => {
+                    if (t.tipe_transaksi === 'stock_awal' || t.tipe_transaksi === 'masuk') {
+                        currentStock += t.jumlah;
+                    } else if (t.tipe_transaksi === 'keluar') {
+                        currentStock -= t.jumlah;
+                        if (currentStock < 0 && !hasNegativeStock) {
+                            stockIssues.push(`${itemName}: Stock negatif pada ${t.tanggal} (${currentStock})`);
+                            hasNegativeStock = true;
+                        }
+                    }
+                });
+
+                // Check price consistency
+                const pricesWithDates = transactions.filter(t => t.harga > 0)
+                    .map(t => ({ harga: t.harga, tanggal: t.tanggal }))
+                    .sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
+
+                if (pricesWithDates.length > 1) {
+                    const prices = pricesWithDates.map(p => p.harga);
+                    const minPrice = Math.min(...prices);
+                    const maxPrice = Math.max(...prices);
+                    const priceVariation = (maxPrice - minPrice) / minPrice;
+
+                    if (priceVariation > 0.5) { // More than 50% variation
+                        priceIssues.push(`${itemName}: Variasi harga tinggi - Min: Rp ${minPrice.toLocaleString('id-ID')}, Max: Rp ${maxPrice.toLocaleString('id-ID')}`);
+                    }
+                }
+
+                // Check for exact duplicates (same date, same type, same amount)
+                const duplicateCheck = {};
+                transactions.forEach(t => {
+                    const dupKey = `${t.tanggal}_${t.tipe_transaksi}_${t.jumlah}_${t.harga}`;
+                    if (duplicateCheck[dupKey]) {
+                        duplicates.push(`${itemName}: Kemungkinan duplikat pada ${t.tanggal} (${t.tipe_transaksi}, ${t.jumlah} unit)`);
+                    } else {
+                        duplicateCheck[dupKey] = true;
+                    }
+                });
+            });
+
+            // Display results
+            let message = 'HASIL CEK KONSISTENSI DATA:\n\n';
+            
+            if (issues.length === 0 && stockIssues.length === 0 && priceIssues.length === 0 && duplicates.length === 0) {
+                message += '✅ Tidak ditemukan masalah dalam data!\n\n';
+            } else {
+                if (issues.length > 0) {
+                    message += '🚨 MASALAH UTAMA:\n' + issues.join('\n') + '\n\n';
+                }
+                
+                if (stockIssues.length > 0) {
+                    message += '⚠️ MASALAH STOCK:\n' + stockIssues.join('\n') + '\n\n';
+                }
+                
+                if (duplicates.length > 0) {
+                    message += '🔄 KEMUNGKINAN DUPLIKAT:\n' + duplicates.join('\n') + '\n\n';
+                }
+                
+                if (priceIssues.length > 0) {
+                    message += '💰 VARIASI HARGA:\n' + priceIssues.join('\n') + '\n\n';
+                }
+            }
+            
+            message += `Total Transaksi: ${dailyTransactions.length}\n`;
+            message += `Total Item Unik: ${Object.keys(itemGroups).length}`;
+
+            alert(message);
         }
     </script>
 </body>
