@@ -896,11 +896,6 @@
             }
         }
 
-        function clearDailyForm() {
-            document.getElementById('dailyTransactionForm').reset();
-            document.getElementById('tanggal').valueAsDate = new Date();
-            toggleTransactionFields();
-        }
 
         function updateDailyStatistics() {
             const today = new Date().toISOString().split('T')[0];
@@ -1029,19 +1024,23 @@
         }
 
         let autoFillTimeout;
+        let lastFilledSKU = ''; // Track last filled SKU to prevent duplicate alerts
         
         function delayedAutoFill() {
             clearTimeout(autoFillTimeout);
             autoFillTimeout = setTimeout(() => {
-                autoFillFromSKU();
+                autoFillFromSKU(false); // false = don't show alert for input events
             }, 800); // 800ms delay to avoid too frequent calls
         }
 
-        function autoFillFromSKU() {
+        function autoFillFromSKU(showAlert = true) {
             const skuInput = document.getElementById('sku_daily');
             const selectedSKU = skuInput.value.trim().toUpperCase(); // Convert to uppercase for consistency
             
             if (!selectedSKU || selectedSKU.length < 2) return;
+            
+            // Prevent duplicate processing of the same SKU
+            if (selectedSKU === lastFilledSKU) return;
             
             // Find the item with this SKU from existing transactions
             const existingItem = dailyTransactions.find(t => t.sku && t.sku.toUpperCase() === selectedSKU);
@@ -1059,12 +1058,25 @@
                     document.getElementById('harga').value = existingItem.harga;
                 }
                 
-                // Show info about the selected item
-                showAlert(`✅ Item ditemukan: ${existingItem.sparepart} (${existingItem.jenis} - ${existingItem.merk})`, 'success');
+                // Update last filled SKU
+                lastFilledSKU = selectedSKU;
+                
+                // Show info about the selected item only if requested
+                if (showAlert) {
+                    showAlert(`✅ Item ditemukan: ${existingItem.sparepart} (${existingItem.jenis} - ${existingItem.merk})`, 'success');
+                }
             } else {
-                // Clear fields if SKU not found (optional)
-                // This allows user to enter new items with new SKU
+                // Clear last filled SKU if not found
+                lastFilledSKU = '';
             }
+        }
+
+        // Clear lastFilledSKU when form is reset
+        function clearDailyForm() {
+            document.getElementById('dailyTransactionForm').reset();
+            document.getElementById('tanggal').valueAsDate = new Date();
+            lastFilledSKU = ''; // Reset tracking
+            toggleTransactionFields();
         }
 
         function generateMonthlyReport() {
