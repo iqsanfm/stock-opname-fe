@@ -1,4 +1,4 @@
-tanggal,sparepart,jenis,merk,tipe_transaksi,jumlah,harga,keterangan
-2024-08-18,"Filter Oli, Premium Grade",Filter,Sakura,stock_awal,50,29000,"Stock awal untuk filter premium, grade terbaik"
-2024-08-18,"Kampas Rem Depan, Ceramic",Rem,"Bendix Pro",stock_awal,20,145000,"Kampas rem ceramic, tahan lama"
-2024-08-19,"Oli Mesin 10W-40, Full Synthetic",Oli,"Shell Helix",masuk,30,98000,"Pembelian oli synthetic, kualitas tinggi"
+tanggal,sku,sparepart,jenis,merk,tipe_transaksi,jumlah,harga,keterangan
+2024-08-18,FOL001,"Filter Oli, Premium Grade",Filter,Sakura,stock_awal,50,29000,"Stock awal untuk filter premium, grade terbaik"
+2024-08-18,KRD001,"Kampas Rem Depan, Ceramic",Rem,"Bendix Pro",stock_awal,20,145000,"Kampas rem ceramic, tahan lama"
+2024-08-19,OLI001,"Oli Mesin 10W-40, Full Synthetic",Oli,"Shell Helix",masuk,30,98000,"Pembelian oli synthetic, kualitas tinggi"

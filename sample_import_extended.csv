@@ -1,18 +1,18 @@
-tanggal,sparepart,jenis,merk,tipe_transaksi,jumlah,harga,keterangan
-2024-08-10,Filter Udara Racing,Filter,K&N,stock_awal,15,485000,Stock awal filter racing
-2024-08-10,CDI Racing,Kelistrikan,BRT,stock_awal,8,920000,Stock awal CDI racing
-2024-08-10,Kopling Manual,Transmisi,Daytona,stock_awal,12,350000,Stock awal kopling manual
-2024-08-10,Shock Absorber Belakang,Suspensi,YSS,stock_awal,6,1350000,Stock awal shock YSS
-2024-08-10,Velg Racing 17 inch,Velg,Power,stock_awal,4,2750000,Stock awal velg racing
-2024-08-11,Filter Udara Racing,Filter,K&N,masuk,10,485000,Restock filter racing
-2024-08-11,Ban Tubeless 120/70-17,Ban,Michelin,masuk,20,820000,Pembelian ban Michelin
-2024-08-12,Filter Udara Racing,Filter,K&N,keluar,3,485000,Jual ke pelanggan A
-2024-08-12,CDI Racing,Kelistrikan,BRT,keluar,1,920000,Pemasangan di motor pelanggan
-2024-08-13,Ban Tubeless 120/70-17,Ban,Michelin,keluar,4,820000,Jual ban premium
-2024-08-13,Knalpot Racing,Exhaust,Yoshimura,masuk,5,3100000,Import knalpot racing
-2024-08-14,Kopling Manual,Transmisi,Daytona,keluar,2,350000,Upgrade kopling pelanggan
-2024-08-14,Master Rem Brembo,Rem,Brembo,masuk,3,1650000,Pembelian master rem premium
-2024-08-15,Velg Racing 17 inch,Velg,Power,keluar,1,2750000,Custom build motor
-2024-08-15,Shock Absorber Belakang,Suspensi,YSS,keluar,2,1350000,Upgrade suspensi pelanggan
-2024-08-16,Knalpot Racing,Exhaust,Yoshimura,keluar,1,3100000,Pemasangan knalpot custom
-2024-08-16,Master Rem Brembo,Rem,Brembo,keluar,1,1650000,Upgrade sistem rem
+tanggal,sku,sparepart,jenis,merk,tipe_transaksi,jumlah,harga,keterangan
+2024-08-10,FLT001,Filter Udara Racing,Filter,K&N,stock_awal,15,485000,Stock awal filter racing
+2024-08-10,CDI001,CDI Racing,Kelistrikan,BRT,stock_awal,8,920000,Stock awal CDI racing
+2024-08-10,KPL001,Kopling Manual,Transmisi,Daytona,stock_awal,12,350000,Stock awal kopling manual
+2024-08-10,SHK001,Shock Absorber Belakang,Suspensi,YSS,stock_awal,6,1350000,Stock awal shock YSS
+2024-08-10,VLG001,Velg Racing 17 inch,Velg,Power,stock_awal,4,2750000,Stock awal velg racing
+2024-08-11,FLT001,Filter Udara Racing,Filter,K&N,masuk,10,485000,Restock filter racing
+2024-08-11,BAN001,Ban Tubeless 120/70-17,Ban,Michelin,masuk,20,820000,Pembelian ban Michelin
+2024-08-12,FLT001,Filter Udara Racing,Filter,K&N,keluar,3,485000,Jual ke pelanggan A
+2024-08-12,CDI001,CDI Racing,Kelistrikan,BRT,keluar,1,920000,Pemasangan di motor pelanggan
+2024-08-13,BAN001,Ban Tubeless 120/70-17,Ban,Michelin,keluar,4,820000,Jual ban premium
+2024-08-13,KNL001,Knalpot Racing,Exhaust,Yoshimura,masuk,5,3100000,Import knalpot racing
+2024-08-14,KPL001,Kopling Manual,Transmisi,Daytona,keluar,2,350000,Upgrade kopling pelanggan
+2024-08-14,MRB001,Master Rem Brembo,Rem,Brembo,masuk,3,1650000,Pembelian master rem premium
+2024-08-15,VLG001,Velg Racing 17 inch,Velg,Power,keluar,1,2750000,Custom build motor
+2024-08-15,SHK001,Shock Absorber Belakang,Suspensi,YSS,keluar,2,1350000,Upgrade suspensi pelanggan
+2024-08-16,KNL001,Knalpot Racing,Exhaust,Yoshimura,keluar,1,3100000,Pemasangan knalpot custom
+2024-08-16,MRB001,Master Rem Brembo,Rem,Brembo,keluar,1,1650000,Upgrade sistem rem

@@ -1,9 +1,9 @@
-tanggal,sparepart,jenis,merk,tipe_transaksi,jumlah,harga,keterangan
-2024-08-20,Smartphone Samsung Galaxy A54,Elektronik,Samsung,stock_awal,50,4500000,Stock awal smartphone hari ini
-2024-08-20,Buku Tulis 100 Lembar,Alat Tulis,Sinar Dunia,stock_awal,200,12000,Stock awal buku tulis
-2024-08-20,Headphone Bluetooth,Elektronik,Sony,masuk,25,350000,Pembelian headphone baru
-2024-08-20,Pulpen Gel 0.5mm,Alat Tulis,Pilot,masuk,100,8000,Restock pulpen kantor
-2024-08-20,Smartphone Samsung Galaxy A54,Elektronik,Samsung,keluar,8,4500000,Penjualan smartphone
-2024-08-20,Buku Tulis 100 Lembar,Alat Tulis,Sinar Dunia,keluar,50,12000,Distribusi ke sekolah
-2024-08-20,Headphone Bluetooth,Elektronik,Sony,keluar,10,350000,Penjualan headphone
-2024-08-20,Pulpen Gel 0.5mm,Alat Tulis,Pilot,keluar,35,8000,Distribusi alat tulis
+tanggal,sku,sparepart,jenis,merk,tipe_transaksi,jumlah,harga,keterangan
+2024-08-20,SM001,Smartphone Samsung Galaxy A54,Elektronik,Samsung,stock_awal,50,4500000,Stock awal smartphone hari ini
+2024-08-20,BT001,Buku Tulis 100 Lembar,Alat Tulis,Sinar Dunia,stock_awal,200,12000,Stock awal buku tulis
+2024-08-20,HP001,Headphone Bluetooth,Elektronik,Sony,masuk,25,350000,Pembelian headphone baru
+2024-08-20,PP001,Pulpen Gel 0.5mm,Alat Tulis,Pilot,masuk,100,8000,Restock pulpen kantor
+2024-08-20,SM001,Smartphone Samsung Galaxy A54,Elektronik,Samsung,keluar,8,4500000,Penjualan smartphone
+2024-08-20,BT001,Buku Tulis 100 Lembar,Alat Tulis,Sinar Dunia,keluar,50,12000,Distribusi ke sekolah
+2024-08-20,HP001,Headphone Bluetooth,Elektronik,Sony,keluar,10,350000,Penjualan headphone
+2024-08-20,PP001,Pulpen Gel 0.5mm,Alat Tulis,Pilot,keluar,35,8000,Distribusi alat tulis

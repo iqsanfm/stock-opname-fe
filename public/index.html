@@ -127,6 +127,11 @@
                                 <input type="date" id="tanggal" name="tanggal" required>
                             </div>
                             <div class="form-group">
+                                <label for="sku_daily">SKU</label>
+                                <input type="text" id="sku_daily" name="sku" required placeholder="Contoh: LP001, KA001, MK001" list="skuList" onchange="autoFillFromSKU()" oninput="delayedAutoFill()">
+                                <datalist id="skuList"></datalist>
+                            </div>
+                            <div class="form-group">
                                 <label for="sparepart_daily">Nama Barang</label>
                                 <input type="text" id="sparepart_daily" name="sparepart" required list="sparepartsList" placeholder="Contoh: Laptop, Kertas A4, Meja Kantor, dll">
                                 <datalist id="sparepartsList"></datalist>
@@ -208,6 +213,7 @@
                             <thead>
                                 <tr>
                                     <th>Tanggal</th>
+                                    <th>SKU</th>
                                     <th>Nama Barang</th>
                                     <th>Jenis</th>
                                     <th>Merk</th>
@@ -270,6 +276,7 @@
                         <table id="monthlyReportTable">
                             <thead>
                                 <tr>
+                                    <th>SKU</th>
                                     <th>Nama Barang</th>
                                     <th>Jenis</th>
                                     <th>Merk</th>
@@ -333,6 +340,7 @@
                         <table id="opnameTable">
                             <thead>
                                 <tr>
+                                    <th>SKU</th>
                                     <th>Nama Barang</th>
                                     <th>Jenis</th>
                                     <th>Merk</th>
@@ -719,6 +727,10 @@
             const warnings = [];
 
             // Basic validation
+            if (!data.sku || data.sku.trim().length < 2) {
+                errors.push('SKU harus minimal 2 karakter');
+            }
+
             if (!data.sparepart || data.sparepart.trim().length < 2) {
                 errors.push('Nama barang harus minimal 2 karakter');
             }
@@ -741,6 +753,15 @@
 
             if (data.tipe_transaksi !== 'keluar' && (!data.harga || data.harga <= 0)) {
                 errors.push('Harga harus lebih dari 0 untuk transaksi masuk/stock awal');
+            }
+
+            // Check for duplicate SKU
+            const existingSKU = dailyTransactions.find(t => 
+                t.sku && t.sku.toUpperCase() === data.sku.toUpperCase()
+            );
+
+            if (existingSKU) {
+                errors.push(`SKU '${data.sku}' sudah digunakan untuk item: ${existingSKU.sparepart}`);
             }
 
             // Check for duplicates on same date
@@ -821,6 +842,7 @@
             const data = {
                 id: Date.now(), // Unique ID for editing
                 tanggal: formData.get('tanggal'),
+                sku: formData.get('sku').trim().toUpperCase(), // Normalize SKU to uppercase
                 sparepart: formData.get('sparepart').trim(),
                 jenis: formData.get('jenis'),
                 merk: formData.get('merk').trim(),
@@ -928,6 +950,7 @@
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${transaction.tanggal}</td>
+                    <td>${transaction.sku || '-'}</td>
                     <td>${transaction.sparepart}</td>
                     <td>${transaction.jenis}</td>
                     <td>${transaction.merk}</td>
@@ -964,15 +987,84 @@
         }
 
         function updateSparepartsList() {
-            const datalist = document.getElementById('sparepartsList');
+            // Update spareparts datalist
+            const sparepartsDatalist = document.getElementById('sparepartsList');
             const spareparts = [...new Set(dailyTransactions.map(t => t.sparepart))];
             
-            datalist.innerHTML = '';
+            sparepartsDatalist.innerHTML = '';
             spareparts.forEach(sparepart => {
                 const option = document.createElement('option');
                 option.value = sparepart;
-                datalist.appendChild(option);
+                sparepartsDatalist.appendChild(option);
             });
+
+            // Update SKU datalist
+            const skuDatalist = document.getElementById('skuList');
+            const uniqueItems = {};
+            
+            // Create unique items map with latest transaction data for each SKU
+            dailyTransactions.forEach(t => {
+                if (t.sku) {
+                    uniqueItems[t.sku] = {
+                        sku: t.sku,
+                        sparepart: t.sparepart,
+                        jenis: t.jenis,
+                        merk: t.merk,
+                        harga: t.harga
+                    };
+                }
+            });
+            
+            skuDatalist.innerHTML = '';
+            Object.values(uniqueItems).forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.sku;
+                option.setAttribute('data-sparepart', item.sparepart);
+                option.setAttribute('data-jenis', item.jenis);
+                option.setAttribute('data-merk', item.merk);
+                option.setAttribute('data-harga', item.harga);
+                option.textContent = `${item.sku} - ${item.sparepart}`;
+                skuDatalist.appendChild(option);
+            });
+        }
+
+        let autoFillTimeout;
+        
+        function delayedAutoFill() {
+            clearTimeout(autoFillTimeout);
+            autoFillTimeout = setTimeout(() => {
+                autoFillFromSKU();
+            }, 800); // 800ms delay to avoid too frequent calls
+        }
+
+        function autoFillFromSKU() {
+            const skuInput = document.getElementById('sku_daily');
+            const selectedSKU = skuInput.value.trim().toUpperCase(); // Convert to uppercase for consistency
+            
+            if (!selectedSKU || selectedSKU.length < 2) return;
+            
+            // Find the item with this SKU from existing transactions
+            const existingItem = dailyTransactions.find(t => t.sku && t.sku.toUpperCase() === selectedSKU);
+            
+            if (existingItem) {
+                // Auto-fill the form fields
+                document.getElementById('sparepart_daily').value = existingItem.sparepart;
+                document.getElementById('jenis_daily').value = existingItem.jenis;
+                document.getElementById('merk_daily').value = existingItem.merk;
+                
+                // For masuk transactions, suggest the last known price
+                // For stock_awal, user should enter price manually
+                const tipeTransaksi = document.getElementById('tipe_transaksi').value;
+                if (tipeTransaksi === 'masuk' && existingItem.harga > 0) {
+                    document.getElementById('harga').value = existingItem.harga;
+                }
+                
+                // Show info about the selected item
+                showAlert(`✅ Item ditemukan: ${existingItem.sparepart} (${existingItem.jenis} - ${existingItem.merk})`, 'success');
+            } else {
+                // Clear fields if SKU not found (optional)
+                // This allows user to enter new items with new SKU
+            }
         }
 
         function generateMonthlyReport() {
@@ -1001,12 +1093,13 @@
             const monthTransactions = dailyTransactions.filter(t => t.tanggal.startsWith(month));
             const sparepartGroups = {};
 
-            // Group by sparepart
+            // Group by SKU (or fallback to sparepart+jenis+merk for old data)
             monthTransactions.forEach(transaction => {
-                const key = `${transaction.sparepart}_${transaction.jenis}_${transaction.merk}`;
+                const key = transaction.sku || `${transaction.sparepart}_${transaction.jenis}_${transaction.merk}`;
                 
                 if (!sparepartGroups[key]) {
                     sparepartGroups[key] = {
+                        sku: transaction.sku || '',
                         sparepart: transaction.sparepart,
                         jenis: transaction.jenis,
                         merk: transaction.merk,
@@ -1046,6 +1139,7 @@
                 const totalValue = stockAkhir * hargaRataRataWeighted;
 
                 return {
+                    sku: group.sku,
                     sparepart: group.sparepart,
                     jenis: group.jenis,
                     merk: group.merk,
@@ -1089,6 +1183,7 @@
             monthlyData.forEach(item => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
+                    <td>${item.sku || '-'}</td>
                     <td>${item.sparepart}</td>
                     <td>${item.jenis}</td>
                     <td>${item.merk}</td>
@@ -1134,6 +1229,7 @@
             const existingOpnameIndex = opnameData.findIndex(o => o.month === opnameMonth);
             
             const opnameItems = existingReport.data.map(item => ({
+                sku: item.sku,
                 sparepart: item.sparepart,
                 jenis: item.jenis,
                 merk: item.merk,
@@ -1183,13 +1279,15 @@
             data.forEach((item, index) => {
                 // Find actual index in the original data array
                 const actualIndex = existingOpname.data.findIndex(origItem => 
-                    origItem.sparepart === item.sparepart && 
-                    origItem.jenis === item.jenis && 
-                    origItem.merk === item.merk
+                    (origItem.sku && item.sku && origItem.sku === item.sku) ||
+                    (origItem.sparepart === item.sparepart && 
+                     origItem.jenis === item.jenis && 
+                     origItem.merk === item.merk)
                 );
                 
                 const row = document.createElement('tr');
                 row.innerHTML = `
+                    <td>${item.sku || '-'}</td>
                     <td>${item.sparepart}</td>
                     <td>${item.jenis}</td>
                     <td>${item.merk}</td>
@@ -1262,6 +1360,7 @@
                     const adjustmentTransaction = {
                         id: Date.now() + Math.random(),
                         tanggal: new Date().toISOString().split('T')[0],
+                        sku: item.sku,
                         sparepart: item.sparepart,
                         jenis: item.jenis,
                         merk: item.merk,
@@ -1288,7 +1387,7 @@
         function exportDailyTransactions() {
             const data = dailyTransactions;
             const csv = convertToCSV(data, [
-                'tanggal', 'sparepart', 'jenis', 'merk', 'tipe_transaksi', 
+                'tanggal', 'sku', 'sparepart', 'jenis', 'merk', 'tipe_transaksi', 
                 'jumlah', 'harga', 'total', 'keterangan'
             ]);
             downloadCSV(csv, 'transaksi_harian.csv');
@@ -1304,7 +1403,7 @@
             }
 
             const csv = convertToCSV(existingReport.data, [
-                'sparepart', 'jenis', 'merk', 'stockAwal', 'hargaAwal', 'masuk',
+                'sku', 'sparepart', 'jenis', 'merk', 'stockAwal', 'hargaAwal', 'masuk',
                 'keluar', 'stockAkhir', 'hargaRataRataWeighted', 'totalValue'
             ]);
             downloadCSV(csv, `laporan_bulanan_${reportMonth}.csv`);
@@ -1320,7 +1419,7 @@
             }
 
             const csv = convertToCSV(existingOpname.data, [
-                'sparepart', 'jenis', 'merk', 'stockSistem', 'stockFisik', 'selisih',
+                'sku', 'sparepart', 'jenis', 'merk', 'stockSistem', 'stockFisik', 'selisih',
                 'harga', 'valueSistem', 'valueFisik', 'keterangan'
             ]);
             downloadCSV(csv, `stock_opname_${opnameMonth}.csv`);
@@ -1440,9 +1539,9 @@
             // Parse header
             const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
             
-            // Expected headers
-            const expectedHeaders = ['tanggal', 'sparepart', 'jenis', 'merk', 'tipe_transaksi', 'jumlah', 'harga', 'keterangan'];
-            const missingHeaders = expectedHeaders.filter(h => !headers.some(header => header.toLowerCase() === h));
+            // Expected headers (SKU is optional for backward compatibility)
+            const requiredHeaders = ['tanggal', 'sparepart', 'jenis', 'merk', 'tipe_transaksi', 'jumlah', 'harga', 'keterangan'];
+            const missingHeaders = requiredHeaders.filter(h => !headers.some(header => header.toLowerCase() === h));
             
             if (missingHeaders.length > 0) {
                 throw new Error(`Header yang hilang: ${missingHeaders.join(', ')}`);
@@ -1567,6 +1666,7 @@
                     const transactions = csvData.map(row => ({
                         id: Date.now() + Math.random(),
                         tanggal: row.tanggal,
+                        sku: row.sku ? row.sku.trim().toUpperCase() : '', // Normalize SKU to uppercase
                         sparepart: row.sparepart.trim(),
                         jenis: row.jenis,
                         merk: row.merk.trim(),
@@ -1715,10 +1815,10 @@
             const stockIssues = [];
             const priceIssues = [];
 
-            // Group transactions by item
+            // Group transactions by item (use SKU if available, fallback to name+jenis+merk)
             const itemGroups = {};
             dailyTransactions.forEach(t => {
-                const key = `${t.sparepart.toLowerCase().trim()}_${t.jenis}_${t.merk.toLowerCase().trim()}`;
+                const key = t.sku || `${t.sparepart.toLowerCase().trim()}_${t.jenis}_${t.merk.toLowerCase().trim()}`;
                 if (!itemGroups[key]) {
                     itemGroups[key] = [];
                 }
