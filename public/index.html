@@ -505,6 +505,15 @@
                 
                 return result;
             } catch (error) {
+                // Handle CORS and network errors more gracefully
+                if (error.name === 'TypeError' && (
+                    error.message.includes('Failed to fetch') || 
+                    error.message.includes('NetworkError') ||
+                    error.message.includes('CORS')
+                )) {
+                    console.error('CORS or Network Error detected:', error);
+                    throw new Error('CORS_ERROR');
+                }
                 console.error('API Call Error:', error);
                 throw error;
             }
@@ -555,7 +564,9 @@
                     throw new Error(result.message || 'Login gagal');
                 }
             } catch (error) {
-                console.log('Backend login failed, trying local auth:', error.message);
+                const isCorsError = error.message === 'CORS_ERROR';
+                const errorMsg = isCorsError ? 'CORS issue detected, using offline mode' : error.message;
+                console.log('Backend login failed, trying local auth:', errorMsg);
                 
                 // Fallback to local authentication
                 const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
@@ -579,7 +590,9 @@
                         updateSparepartsList(); // Update with local data
                     }, 100);
                     loadDailyTransactions();
-                    showAlert('Login berhasil! (Mode Offline)', 'success');
+                    
+                    const modeText = isCorsError ? 'Mode Offline - CORS Issue' : 'Mode Offline';
+                    showAlert(`Login berhasil! (${modeText})`, 'success');
                 } else {
                     showAlert('Email atau password salah!', 'error');
                 }
@@ -647,11 +660,17 @@
         function updateUserInfo() {
             if (currentUser) {
                 const roleColor = currentUser.role === 'admin' ? '#e74c3c' : '#3498db';
+                const backendMode = authToken ? '🌐 API Mode' : '💾 Offline Mode';
+                const backendColor = authToken ? '#27ae60' : '#f39c12';
+                
                 document.getElementById('userInfo').innerHTML = `
                     <div style="display: flex; flex-direction: column; align-items: flex-start;">
                         <strong style="font-size: 1rem;">${currentUser.username}</strong>
                         <span style="color: ${roleColor}; font-weight: 600; text-transform: uppercase; font-size: 0.8rem;">
                             ${currentUser.role === 'admin' ? '👑 ADMIN' : '👤 USER'}
+                        </span>
+                        <span style="color: ${backendColor}; font-size: 0.7rem; font-weight: 500;">
+                            ${backendMode}
                         </span>
                     </div>
                     <button class="logout-btn" onclick="logout()">
@@ -1068,7 +1087,9 @@
                     });
                 }
             } catch (error) {
-                console.error('Error loading SKU suggestions from API:', error);
+                const isCorsError = error.message === 'CORS_ERROR';
+                const errorMsg = isCorsError ? 'CORS issue, using local data' : error.message;
+                console.error('Error loading SKU suggestions from API:', errorMsg);
                 // Fallback to local data
                 updateSKUDatalistLocal();
             }
@@ -1152,7 +1173,9 @@
                         }
                     }
                 } catch (error) {
-                    console.log('Item not found in API, trying local data...');
+                    const isCorsError = error.message === 'CORS_ERROR';
+                    const errorMsg = isCorsError ? 'CORS issue, trying local data' : 'Item not found in API, trying local data';
+                    console.log(errorMsg);
                 }
             }
             
