@@ -36,15 +36,15 @@
                     <div class="demo-account">
                         <div class="demo-role admin">👑 ADMIN</div>
                         <div class="demo-credentials">
-                            <span class="demo-email">admin@demo.com</span>
-                            <span class="demo-password">admin123</span>
+                            <span class="demo-email">admin@inventory.com</span>
+                            <span class="demo-password">password123</span>
                         </div>
                     </div>
                     <div class="demo-account">
                         <div class="demo-role user">👤 USER</div>
                         <div class="demo-credentials">
-                            <span class="demo-email">user@demo.com</span>
-                            <span class="demo-password">user123</span>
+                            <span class="demo-email">user1@inventory.com</span>
+                            <span class="demo-password">password123</span>
                         </div>
                     </div>
                 </div>
@@ -364,7 +364,7 @@
 
     <script>
         // API Configuration - Point to separate backend
-        const API_BASE_URL = 'https://stock-opname-be-woad.vercel.app';
+        const API_BASE_URL = 'https://backend-vercel-nu-sable.vercel.app';
         let currentUser = null;
         let authToken = localStorage.getItem('authToken');
         
@@ -373,21 +373,21 @@
         let monthlyReports = [];
         let opnameData = [];
 
-        // Initialize demo users
+        // Initialize demo users (for local fallback only)
         function initializeDemoUsers() {
             const existingUsers = localStorage.getItem('registeredUsers');
             if (!existingUsers) {
                 const demoUsers = [
                     {
-                        username: 'Admin Demo',
-                        email: 'admin@demo.com',
-                        password: 'admin123',
+                        username: 'admin',
+                        email: 'admin@inventory.com',
+                        password: 'password123',
                         role: 'admin'
                     },
                     {
-                        username: 'User Demo',
-                        email: 'user@demo.com', 
-                        password: 'user123',
+                        username: 'user1',
+                        email: 'user1@inventory.com', 
+                        password: 'password123',
                         role: 'user'
                     }
                 ];
@@ -511,34 +511,78 @@
         }
 
         // Login form handler
-        document.getElementById('loginFormElement').addEventListener('submit', function(e) {
+        document.getElementById('loginFormElement').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
             
-            // Simple demo authentication
-            const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-            const user = users.find(u => u.email === email && u.password === password);
-            
-            if (user) {
-                currentUser = {
-                    username: user.username,
-                    email: user.email,
-                    role: user.role
-                };
+            try {
+                // Try backend authentication first
+                const loginData = { email, password };
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(loginData)
+                });
                 
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                const result = await response.json();
                 
-                hideAuthModal();
-                setTimeout(() => {
-                    updateUserInfo();
-                    updateUIBasedOnRole();
-                }, 100);
-                loadDailyTransactions();
-                showAlert('Login berhasil!', 'success');
-            } else {
-                showAlert('Email atau password salah!', 'error');
+                if (result.success && result.token) {
+                    // Backend authentication successful
+                    authToken = result.token;
+                    currentUser = {
+                        id: result.user.id,
+                        username: result.user.username,
+                        email: result.user.email,
+                        role: result.user.role
+                    };
+                    
+                    localStorage.setItem('authToken', authToken);
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    
+                    hideAuthModal();
+                    setTimeout(() => {
+                        updateUserInfo();
+                        updateUIBasedOnRole();
+                        updateSparepartsList(); // Update SKU suggestions from API
+                    }, 100);
+                    loadDailyTransactions();
+                    showAlert('Login berhasil! (Backend API)', 'success');
+                } else {
+                    throw new Error(result.message || 'Login gagal');
+                }
+            } catch (error) {
+                console.log('Backend login failed, trying local auth:', error.message);
+                
+                // Fallback to local authentication
+                const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+                const user = users.find(u => u.email === email && u.password === password);
+                
+                if (user) {
+                    currentUser = {
+                        username: user.username,
+                        email: user.email,
+                        role: user.role
+                    };
+                    
+                    authToken = null; // No token for local auth
+                    localStorage.removeItem('authToken');
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    
+                    hideAuthModal();
+                    setTimeout(() => {
+                        updateUserInfo();
+                        updateUIBasedOnRole();
+                        updateSparepartsList(); // Update with local data
+                    }, 100);
+                    loadDailyTransactions();
+                    showAlert('Login berhasil! (Mode Offline)', 'success');
+                } else {
+                    showAlert('Email atau password salah!', 'error');
+                }
             }
         });
 
@@ -985,7 +1029,7 @@
         }
 
         function updateSparepartsList() {
-            // Update spareparts datalist
+            // Update spareparts datalist (local data)
             const sparepartsDatalist = document.getElementById('sparepartsList');
             const spareparts = [...new Set(dailyTransactions.map(t => t.sparepart))];
             
@@ -996,7 +1040,41 @@
                 sparepartsDatalist.appendChild(option);
             });
 
-            // Update SKU datalist
+            // Update SKU datalist from API if authenticated
+            updateSKUDatalistFromAPI();
+        }
+
+        async function updateSKUDatalistFromAPI() {
+            const skuDatalist = document.getElementById('skuList');
+            
+            // If not authenticated, use local data
+            if (!authToken || !currentUser) {
+                updateSKUDatalistLocal();
+                return;
+            }
+
+            try {
+                const response = await apiCall('/items/suggestions');
+                if (response.success && response.data) {
+                    skuDatalist.innerHTML = '';
+                    response.data.forEach(item => {
+                        const option = document.createElement('option');
+                        option.value = item.sku;
+                        option.setAttribute('data-sparepart', item.name);
+                        option.setAttribute('data-jenis', item.category);
+                        option.setAttribute('data-merk', item.brand);
+                        option.textContent = item.label;
+                        skuDatalist.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading SKU suggestions from API:', error);
+                // Fallback to local data
+                updateSKUDatalistLocal();
+            }
+        }
+
+        function updateSKUDatalistLocal() {
             const skuDatalist = document.getElementById('skuList');
             const uniqueItems = {};
             
@@ -1036,7 +1114,7 @@
             }, 800); // 800ms delay to avoid too frequent calls
         }
 
-        function autoFillFromSKU(showAlert = true) {
+        async function autoFillFromSKU(showAlert = true) {
             const skuInput = document.getElementById('sku_daily');
             const selectedSKU = skuInput.value.trim().toUpperCase(); // Convert to uppercase for consistency
             
@@ -1045,30 +1123,67 @@
             // Prevent duplicate processing of the same SKU
             if (selectedSKU === lastFilledSKU) return;
             
-            // Find the item with this SKU from existing transactions
-            const existingItem = dailyTransactions.find(t => t.sku && t.sku.toUpperCase() === selectedSKU);
+            let itemFound = false;
             
-            if (existingItem) {
-                // Auto-fill the form fields
-                document.getElementById('sparepart_daily').value = existingItem.sparepart;
-                document.getElementById('jenis_daily').value = existingItem.jenis;
-                document.getElementById('merk_daily').value = existingItem.merk;
-                
-                // For masuk transactions, suggest the last known price
-                // For stock_awal, user should enter price manually
-                const tipeTransaksi = document.getElementById('tipe_transaksi').value;
-                if (tipeTransaksi === 'masuk' && existingItem.harga > 0) {
-                    document.getElementById('harga').value = existingItem.harga;
+            // Try to get item from API first if authenticated
+            if (authToken && currentUser) {
+                try {
+                    const response = await apiCall(`/items/sku/${selectedSKU}`);
+                    if (response.success && response.data) {
+                        const item = response.data;
+                        // Auto-fill the form fields
+                        document.getElementById('sparepart_daily').value = item.name;
+                        document.getElementById('jenis_daily').value = item.category;
+                        document.getElementById('merk_daily').value = item.brand;
+                        
+                        // For masuk transactions, suggest the base price
+                        const tipeTransaksi = document.getElementById('tipe_transaksi').value;
+                        if (tipeTransaksi === 'masuk' && item.averagePrice > 0) {
+                            document.getElementById('harga').value = item.averagePrice;
+                        }
+                        
+                        // Update last filled SKU
+                        lastFilledSKU = selectedSKU;
+                        itemFound = true;
+                        
+                        // Show info about the selected item only if requested
+                        if (showAlert) {
+                            showAlert(`✅ Item ditemukan dari API: ${item.name} (${item.category} - ${item.brand})`, 'success');
+                        }
+                    }
+                } catch (error) {
+                    console.log('Item not found in API, trying local data...');
                 }
+            }
+            
+            // If not found in API, try local data
+            if (!itemFound) {
+                const existingItem = dailyTransactions.find(t => t.sku && t.sku.toUpperCase() === selectedSKU);
                 
-                // Update last filled SKU
-                lastFilledSKU = selectedSKU;
-                
-                // Show info about the selected item only if requested
-                if (showAlert) {
-                    showAlert(`✅ Item ditemukan: ${existingItem.sparepart} (${existingItem.jenis} - ${existingItem.merk})`, 'success');
+                if (existingItem) {
+                    // Auto-fill the form fields
+                    document.getElementById('sparepart_daily').value = existingItem.sparepart;
+                    document.getElementById('jenis_daily').value = existingItem.jenis;
+                    document.getElementById('merk_daily').value = existingItem.merk;
+                    
+                    // For masuk transactions, suggest the last known price
+                    const tipeTransaksi = document.getElementById('tipe_transaksi').value;
+                    if (tipeTransaksi === 'masuk' && existingItem.harga > 0) {
+                        document.getElementById('harga').value = existingItem.harga;
+                    }
+                    
+                    // Update last filled SKU
+                    lastFilledSKU = selectedSKU;
+                    itemFound = true;
+                    
+                    // Show info about the selected item only if requested
+                    if (showAlert) {
+                        showAlert(`✅ Item ditemukan: ${existingItem.sparepart} (${existingItem.jenis} - ${existingItem.merk})`, 'success');
+                    }
                 }
-            } else {
+            }
+            
+            if (!itemFound) {
                 // Clear last filled SKU if not found
                 lastFilledSKU = '';
             }
