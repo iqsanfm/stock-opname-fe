@@ -755,13 +755,16 @@
                 errors.push('Harga harus lebih dari 0 untuk transaksi masuk/stock awal');
             }
 
-            // Check for duplicate SKU
+            // Check for duplicate SKU only for different items (different sparepart/jenis/merk)
             const existingSKU = dailyTransactions.find(t => 
-                t.sku && t.sku.toUpperCase() === data.sku.toUpperCase()
+                t.sku && t.sku.toUpperCase() === data.sku.toUpperCase() &&
+                (t.sparepart.toLowerCase().trim() !== data.sparepart.toLowerCase().trim() ||
+                 t.jenis !== data.jenis ||
+                 t.merk.toLowerCase().trim() !== data.merk.toLowerCase().trim())
             );
 
             if (existingSKU) {
-                errors.push(`SKU '${data.sku}' sudah digunakan untuk item: ${existingSKU.sparepart}`);
+                errors.push(`SKU '${data.sku}' sudah digunakan untuk item berbeda: ${existingSKU.sparepart} (${existingSKU.jenis} - ${existingSKU.merk})`);
             }
 
             // Check for duplicates on same date
